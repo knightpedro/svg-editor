@@ -1,0 +1,28 @@
+{
+  "name": "svg-editor",
+  "version": "1.0.0",
+  "description": "Simple SVG editor",
+  "source": "src/index.ts",
+  "main": "dist/svg-editor.js",
+  "module": "dist/svg-editor.module.js",
+  "unpkg": "dist/svg-editor.umd.js",
+  "scripts": {
+    "build": "microbundle",
+    "dev": "microbundle watch",
+    "standalone": "microbundle -o dist/standalone.umd.js --external none --format umd --sourcemap false",
+    "test": "jest"
+  },
+  "author": "Peter Knight",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/d3": "^5.16.3",
+    "@types/jest": "^26.0.15",
+    "@types/uuid": "^8.3.0",
+    "jest": "^26.6.1",
+    "microbundle": "^0.12.4"
+  },
+  "dependencies": {
+    "d3": "^6.2.0",
+    "uuid": "^8.3.1"
+  }
+}
