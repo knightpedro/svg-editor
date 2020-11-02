@@ -1,17 +1,17 @@
-import { Point } from "../interfaces/index";
-import { SVGPointFromEvent } from "../utils/index";
-import { select } from "d3";
+import { select } from "d3-selection";
 import { DrawingTool } from "./DrawingTool";
+import { Point } from "../interfaces/Point";
+import { distanceBetweenPoints, SVGPointFromEvent } from "../utils/index";
 
-export class DrawRectangle extends DrawingTool {
-  private origin: Point = { x: 0, y: 0 };
-  private termination: Point = { x: 0, y: 0 };
-  private firstClick = true;
-  private notifyComplete = () => {};
+export class DrawCircle extends DrawingTool {
+  centre: Point = { x: 0, y: 0 };
+  radius = 0;
+  notifyComplete = () => {};
+  firstClick = true;
 
-  static createIcon(): HTMLButtonElement {
+  static createIcon() {
     const icon = document.createElement("button");
-    icon.innerHTML = "Rectangle";
+    icon.innerHTML = "Circle";
     return icon;
   }
 
@@ -32,10 +32,10 @@ export class DrawRectangle extends DrawingTool {
 
   createPreview() {
     select(this.svg)
-      .append("rect")
+      .append("circle")
       .attr("data-id", this.id)
-      .attr("x", this.origin.x)
-      .attr("y", this.origin.y)
+      .attr("cx", this.centre.x)
+      .attr("cy", this.centre.y)
       .classed("preview", true);
   }
 
@@ -52,31 +52,23 @@ export class DrawRectangle extends DrawingTool {
   handleClick = (e: MouseEvent) => {
     const point = SVGPointFromEvent(e, this.svg);
     if (this.firstClick) {
-      this.origin = point;
+      this.centre = point;
       this.firstClick = false;
       this.createPreview();
       this.svg.addEventListener("mousemove", this.handleMouseMove);
     } else {
-      this.termination = point;
-      this.update();
+      this.update(point);
       this.complete();
     }
   };
 
   handleMouseMove = (e: MouseEvent) => {
-    this.termination = SVGPointFromEvent(e, this.svg);
-    this.update();
+    const point = SVGPointFromEvent(e, this.svg);
+    this.update(point);
   };
 
-  update() {
-    const x = Math.min(this.origin.x, this.termination.x);
-    const y = Math.min(this.origin.y, this.termination.y);
-    const width = Math.abs(this.origin.x - this.termination.x);
-    const height = Math.abs(this.origin.y - this.termination.y);
-    this.selection()
-      .attr("x", x)
-      .attr("y", y)
-      .attr("width", width)
-      .attr("height", height);
+  update(point: Point) {
+    this.radius = distanceBetweenPoints(this.centre, point);
+    this.selection().attr("r", this.radius);
   }
 }

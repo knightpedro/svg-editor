@@ -1,15 +1,23 @@
 import { Command } from "./commands/Command";
+import { DrawCircle } from "./commands/DrawCircle";
+import { DrawingTool } from "./commands/DrawingTool";
 import { DrawRectangle } from "./commands/DrawRectangle";
 
 const XMLNS = "http://www.w3.org/2000/svg";
-const toolbarItems = [DrawRectangle];
+const toolbarItems = [DrawRectangle, DrawCircle];
+
+interface SVGEditorOptions {
+  toolbarItems: typeof DrawingTool[];
+}
 
 class SVGEditor {
   container: HTMLDivElement;
   activeCommand: Command | null = null;
+  options: SVGEditorOptions;
 
-  constructor(el: HTMLDivElement) {
+  constructor(el: HTMLDivElement, options: SVGEditorOptions) {
     this.container = el;
+    this.options = options;
 
     const toolbar = document.createElement("div");
     toolbar.setAttribute("class", "svg-editor-toolbar");
@@ -20,14 +28,12 @@ class SVGEditor {
     const svg = document.createElementNS(XMLNS, "svg");
     canvas.appendChild(svg);
 
-    toolbarItems.map((item) => {
+    this.options.toolbarItems.map((item) => {
       const icon = item.createIcon();
       icon.addEventListener("click", () => {
-        const tool = new item(svg);
-        tool.execute();
-        // Need to be able to tell when command has finished executing
-
-        // The command should be "add this rectangle to the SVG" not "start drawing"
+        this.activeCommand?.cancel();
+        this.activeCommand = new item(svg);
+        this.activeCommand.execute(this.onCommandComplete.bind(this));
       });
       toolbar.appendChild(icon);
     });
@@ -35,10 +41,14 @@ class SVGEditor {
     this.container.appendChild(toolbar);
     this.container.appendChild(canvas);
   }
+
+  onCommandComplete() {
+    this.activeCommand = null;
+  }
 }
 
 function svgEditor(el: HTMLDivElement) {
-  return new SVGEditor(el);
+  return new SVGEditor(el, { toolbarItems });
 }
 
 export default svgEditor;
