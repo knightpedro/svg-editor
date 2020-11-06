@@ -9,35 +9,55 @@ export class RectangleTool extends DrawingTool {
 
   activate(notifyCompletion: NotifyCompletionCallback): void {
     this.notifyCompletion = notifyCompletion;
-    this.canvas.register('click', this.handleClick.bind(this));
+    this.canvas.register("click", this.handleClick.bind(this));
   }
 
   cancel(): void {
-    this
+    this.deactivate();
+    this.canvas.removeGraphic(this.rect.id);
   }
 
-  handleClick(e: MouseEvent) {
-      const clientPoint = pointFromEvent(e);
-      const canvasPoint = this.canvas.localPoint(clientPoint);
-      if (this.firstClick) {
-          this.rect.origin = canvasPoint;
-          this.canvas.drawRect(this.rect);
-          this.canvas.register("mousemove", this.handleMouseMove.bind(this))
-          this.firstClick = false;
-      }
-      else {
-          this.
-      }
+  complete(): void {
+    this.deactivate();
+    const command = new DrawRectangleCommand();
+    this.notifyCompletion(command);
   }
 
-  handleMouseMove(e: MouseEvent) {
-
+  deactivate(): void {
+    this.canvas.unregister("click", this.handleClick); // Does binding matter??
+    this.canvas.unregister("mousemove", this.handleMouseMove);
   }
 
-  update(point: Point) {
+  handleClick(e: MouseEvent): void {
+    const clientPoint = pointFromEvent(e);
+    const canvasPoint = this.canvas.localPoint(clientPoint);
+    if (this.firstClick) {
+      this.rect.x = canvasPoint.x;
+      this.rect.y = canvasPoint.y;
+      this.canvas.drawRect(this.rect);
+      this.canvas.register("mousemove", this.handleMouseMove.bind(this));
+      this.firstClick = false;
+    } else {
+      this.update(canvasPoint);
+      this.complete();
+    }
+  }
+
+  handleMouseMove(e: MouseEvent): void {
+    const clientPoint = pointFromEvent(e);
+    const canvasPoint = this.canvas.localPoint(clientPoint);
+    this.update(canvasPoint);
+  }
+
+  update(point: Point): void {
     const x = Math.min(this.rect.x, point.x);
     const y = Math.min(this.rect.y, point.y);
-    const width = Math.abs(this.rect.x - this.termination.x);
-    const height = Math.abs(this.origin.y - this.termination.y);
+    const width = Math.abs(this.rect.x - point.x);
+    const height = Math.abs(this.rect.y - point.y);
+    this.rect.x = x;
+    this.rect.y = y;
+    this.rect.width = width;
+    this.rect.height = height;
+    this.canvas.updateGraphic(this.rect);
   }
 }
