@@ -1,7 +1,6 @@
-import { Canvas } from "../interfaces/Canvas";
-import { Command } from "../interfaces/Command";
+import { Canvas, Command } from "../interfaces";
 
-export type NotifyCompletionCallback = (command?: Command) => void;
+export type NotifyCompletionCallback = (command: Command) => void;
 
 export abstract class DrawingTool {
   protected canvas: Canvas;

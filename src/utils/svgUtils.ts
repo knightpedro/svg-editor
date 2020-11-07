@@ -1,4 +1,4 @@
-import { Point } from "../interfaces/Point";
+import { Point } from "../interfaces";
 
 export function distanceBetweenPoints(pointA: Point, pointB: Point): number {
   return Math.sqrt(

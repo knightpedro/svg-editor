@@ -1,15 +1,18 @@
-import { pointFromEvent } from "../../dist/utils/index";
-import { Rect } from "../graphics/Rect";
-import { Point } from "../interfaces/Point";
+import { pointFromEvent } from "../utils";
+import { DrawCommand } from "../commands";
+import { Rect } from "../graphics";
+import { Point } from "../interfaces";
 import { DrawingTool, NotifyCompletionCallback } from "./DrawingTool";
 
 export class RectangleTool extends DrawingTool {
-  rect = new Rect();
+  private rect = new Rect();
+  private origin: Point = { x: 0, y: 0 };
+  private termination: Point = { x: 0, y: 0 };
   private firstClick = true;
 
   activate(notifyCompletion: NotifyCompletionCallback): void {
     this.notifyCompletion = notifyCompletion;
-    this.canvas.register("click", this.handleClick.bind(this));
+    this.canvas.register("click", this.handleClick);
   }
 
   cancel(): void {
@@ -19,45 +22,45 @@ export class RectangleTool extends DrawingTool {
 
   complete(): void {
     this.deactivate();
-    const command = new DrawRectangleCommand();
+    const command = new DrawCommand(this.canvas, this.rect);
     this.notifyCompletion(command);
   }
 
   deactivate(): void {
-    this.canvas.unregister("click", this.handleClick); // Does binding matter??
+    this.canvas.unregister("click", this.handleClick);
     this.canvas.unregister("mousemove", this.handleMouseMove);
   }
 
-  handleClick(e: MouseEvent): void {
+  handleClick = (evt: Event): void => {
+    const e = evt as MouseEvent;
     const clientPoint = pointFromEvent(e);
     const canvasPoint = this.canvas.localPoint(clientPoint);
     if (this.firstClick) {
+      this.origin = canvasPoint;
       this.rect.x = canvasPoint.x;
       this.rect.y = canvasPoint.y;
-      this.canvas.drawRect(this.rect);
-      this.canvas.register("mousemove", this.handleMouseMove.bind(this));
+      this.canvas.draw(this.rect);
+      this.canvas.register("mousemove", this.handleMouseMove);
       this.firstClick = false;
     } else {
-      this.update(canvasPoint);
+      this.termination = canvasPoint;
+      this.update();
       this.complete();
     }
-  }
+  };
 
-  handleMouseMove(e: MouseEvent): void {
+  handleMouseMove = (evt: Event): void => {
+    const e = evt as MouseEvent;
     const clientPoint = pointFromEvent(e);
-    const canvasPoint = this.canvas.localPoint(clientPoint);
-    this.update(canvasPoint);
-  }
+    this.termination = this.canvas.localPoint(clientPoint);
+    this.update();
+  };
 
-  update(point: Point): void {
-    const x = Math.min(this.rect.x, point.x);
-    const y = Math.min(this.rect.y, point.y);
-    const width = Math.abs(this.rect.x - point.x);
-    const height = Math.abs(this.rect.y - point.y);
-    this.rect.x = x;
-    this.rect.y = y;
-    this.rect.width = width;
-    this.rect.height = height;
+  update(): void {
+    this.rect.x = Math.min(this.origin.x, this.termination.x);
+    this.rect.y = Math.min(this.origin.y, this.termination.y);
+    this.rect.width = Math.abs(this.origin.x - this.termination.x);
+    this.rect.height = Math.abs(this.origin.y - this.termination.y);
     this.canvas.updateGraphic(this.rect);
   }
 }

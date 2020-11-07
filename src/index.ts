@@ -1,54 +1,47 @@
-import { Command } from "./commands/Command";
-import { DrawCircle } from "./commands/DrawCircle";
-import { DrawingTool } from "./commands/DrawingTool";
-import { DrawRectangle } from "./commands/DrawRectangle";
+import { SVGCanvas } from "./canvas";
+import { Canvas, Command } from "./interfaces";
+import { DrawingTool, RectangleTool, CircleTool } from "./tools";
 
-const XMLNS = "http://www.w3.org/2000/svg";
-const toolbarItems = [DrawRectangle, DrawCircle];
-
-interface SVGEditorOptions {
-  toolbarItems: typeof DrawingTool[];
-}
+const TOOL_TYPES = [RectangleTool, CircleTool];
 
 class SVGEditor {
+  activeTool: DrawingTool | null = null;
   container: HTMLDivElement;
-  activeCommand: Command | null = null;
-  options: SVGEditorOptions;
+  commands: Command[] = [];
+  canvas: Canvas;
 
-  constructor(el: HTMLDivElement, options: SVGEditorOptions) {
-    this.container = el;
-    this.options = options;
+  constructor(container: HTMLDivElement) {
+    this.container = container;
 
     const toolbar = document.createElement("div");
     toolbar.setAttribute("class", "svg-editor-toolbar");
 
-    const canvas = document.createElement("div");
-    canvas.setAttribute("class", "svg-editor-canvas");
+    const canvasContainer = document.createElement("div");
+    canvasContainer.setAttribute("class", "svg-editor-canvas");
 
-    const svg = document.createElementNS(XMLNS, "svg");
-    canvas.appendChild(svg);
+    this.canvas = new SVGCanvas(canvasContainer);
 
-    this.options.toolbarItems.map((item) => {
-      const icon = item.createIcon();
-      icon.addEventListener("click", () => {
-        this.activeCommand?.cancel();
-        this.activeCommand = new item(svg);
-        this.activeCommand.execute(this.onCommandComplete.bind(this));
+    TOOL_TYPES.map((t) => {
+      const btn = document.createElement("button");
+      btn.addEventListener("click", () => {
+        const tool = new t(this.canvas);
+        tool.activate(this.onToolComplete);
       });
-      toolbar.appendChild(icon);
+      toolbar.appendChild(btn);
     });
 
     this.container.appendChild(toolbar);
-    this.container.appendChild(canvas);
+    this.container.appendChild(canvasContainer);
   }
 
-  onCommandComplete() {
-    this.activeCommand = null;
-  }
+  onToolComplete = (command: Command): void => {
+    this.commands.push(command);
+    this.activeTool = null;
+  };
 }
 
 function svgEditor(el: HTMLDivElement) {
-  return new SVGEditor(el, { toolbarItems });
+  return new SVGEditor(el);
 }
 
 export default svgEditor;
