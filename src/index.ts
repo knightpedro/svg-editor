@@ -1,11 +1,12 @@
 import { SVGCanvas } from "./canvas";
 import { Canvas, Command } from "./interfaces";
-import { DrawingTool, RectangleTool, CircleTool } from "./tools";
+import { DrawingTool, RectangleTool, CircleTool, LineTool } from "./tools";
 import { Stack } from "./types";
 
 const toolbarItems = [
-  { name: "Rect", tool: RectangleTool },
+  { name: "Line", tool: LineTool },
   { name: "Circle", tool: CircleTool },
+  { name: "Rect", tool: RectangleTool },
 ];
 
 class SVGEditor {

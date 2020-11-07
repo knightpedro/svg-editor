@@ -1,9 +1,6 @@
 rect,
+line,
 circle {
   fill: none;
   stroke: rgb(5, 9, 216);
-}
-
-.preview {
-  stroke: red;
 }

@@ -1,6 +1,6 @@
 import { select } from "d3";
 import { SVGPointFromClientPoint } from "../utils";
-import { Circle, Rect } from "../graphics";
+import { Circle, Line, Rect } from "../graphics";
 import { Canvas, Point } from "../interfaces";
 import { Graphic } from "../../dist/graphics";
 
@@ -16,6 +16,7 @@ export class SVGCanvas implements Canvas {
 
   draw(graphic: Graphic) {
     if (graphic instanceof Circle) this.drawCircle(graphic as Circle);
+    else if (graphic instanceof Line) this.drawLine(graphic as Line);
     else if (graphic instanceof Rect) this.drawRect(graphic as Rect);
   }
 
@@ -26,6 +27,16 @@ export class SVGCanvas implements Canvas {
       .attr("cx", circle.x)
       .attr("cy", circle.y)
       .attr("r", circle.r);
+  }
+
+  drawLine(line: Line) {
+    select(this.svg)
+      .append("line")
+      .attr("data-id", line.id)
+      .attr("x1", line.start.x)
+      .attr("y1", line.start.y)
+      .attr("x2", line.end.x)
+      .attr("y2", line.end.y);
   }
 
   drawRect(rect: Rect) {
@@ -44,17 +55,26 @@ export class SVGCanvas implements Canvas {
 
   updateGraphic(graphic: Graphic) {
     if (graphic instanceof Circle) this.updateCircle(graphic as Circle);
+    else if (graphic instanceof Line) this.updateLine(graphic as Line);
     else if (graphic instanceof Rect) this.updateRect(graphic as Rect);
   }
 
-  updateCircle(circle: Circle): void {
+  updateCircle(circle: Circle) {
     this.selectById(circle.id)
       .attr("cx", circle.x)
       .attr("cy", circle.y)
       .attr("r", circle.r);
   }
 
-  updateRect(rect: Rect): void {
+  updateLine(line: Line) {
+    this.selectById(line.id)
+      .attr("x1", line.start.x)
+      .attr("y1", line.start.y)
+      .attr("x2", line.end.x)
+      .attr("y2", line.end.y);
+  }
+
+  updateRect(rect: Rect) {
     this.selectById(rect.id)
       .attr("x", rect.x)
       .attr("y", rect.y)
@@ -62,7 +82,7 @@ export class SVGCanvas implements Canvas {
       .attr("height", rect.height);
   }
 
-  removeGraphic(id: string): void {
+  removeGraphic(id: string) {
     select(`[data-id="${id}"]`).remove();
   }
 
