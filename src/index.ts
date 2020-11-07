@@ -1,14 +1,18 @@
 import { SVGCanvas } from "./canvas";
 import { Canvas, Command } from "./interfaces";
 import { DrawingTool, RectangleTool, CircleTool } from "./tools";
+import { Stack } from "./types";
 
 const TOOL_TYPES = [RectangleTool, CircleTool];
 
 class SVGEditor {
   activeTool: DrawingTool | null = null;
   container: HTMLDivElement;
-  commands: Command[] = [];
   canvas: Canvas;
+  undoStack = new Stack<Command>(5);
+  redoStack = new Stack<Command>(5);
+  undoButton: HTMLButtonElement;
+  redoButton: HTMLButtonElement;
 
   constructor(container: HTMLDivElement) {
     this.container = container;
@@ -30,14 +34,58 @@ class SVGEditor {
       toolbar.appendChild(btn);
     });
 
+    this.undoButton = document.createElement("button");
+    this.undoButton.innerHTML = "Undo";
+    this.undoButton.disabled = true;
+    this.undoButton.addEventListener("click", () => {
+      this.undo();
+    });
+
+    this.redoButton = document.createElement("button");
+    this.redoButton.innerHTML = "Redo";
+    this.redoButton.disabled = true;
+    this.redoButton.addEventListener("click", () => {
+      this.redo();
+    });
+
+    toolbar.appendChild(this.undoButton);
+    toolbar.appendChild(this.redoButton);
+
     this.container.appendChild(toolbar);
     this.container.appendChild(canvasContainer);
   }
 
   onToolComplete = (command: Command): void => {
-    this.commands.push(command);
+    this.undoStack.push(command);
+    this.redoStack.clear();
     this.activeTool = null;
+    this.updateUndoRedoButtons();
   };
+
+  undo() {
+    this.activeTool?.cancel();
+    const command = this.undoStack.pop();
+    if (command) {
+      command.undo();
+      this.redoStack.push(command);
+    }
+    this.updateUndoRedoButtons();
+  }
+
+  redo() {
+    this.activeTool?.cancel();
+    const command = this.redoStack.pop();
+    if (command) {
+      command.execute();
+      this.undoStack.push(command);
+    }
+    this.updateUndoRedoButtons();
+  }
+
+  updateUndoRedoButtons() {
+    this.undoButton.disabled = this.undoStack.isEmpty;
+    this.redoButton.disabled = this.redoStack.isEmpty;
+  }
 }
 
 function svgEditor(el: HTMLDivElement) {
