@@ -3,7 +3,10 @@ import { Canvas, Command } from "./interfaces";
 import { DrawingTool, RectangleTool, CircleTool } from "./tools";
 import { Stack } from "./types";
 
-const TOOL_TYPES = [RectangleTool, CircleTool];
+const toolbarItems = [
+  { name: "Rect", tool: RectangleTool },
+  { name: "Circle", tool: CircleTool },
+];
 
 class SVGEditor {
   activeTool: DrawingTool | null = null;
@@ -25,11 +28,14 @@ class SVGEditor {
 
     this.canvas = new SVGCanvas(canvasContainer);
 
-    TOOL_TYPES.map((t) => {
+    toolbarItems.map((item) => {
       const btn = document.createElement("button");
+      btn.setAttribute("title", item.name);
+      btn.innerHTML = item.name;
       btn.addEventListener("click", () => {
-        const tool = new t(this.canvas);
-        tool.activate(this.onToolComplete);
+        this.activeTool?.cancel();
+        this.activeTool = new item.tool(this.canvas);
+        this.activeTool.activate(this.onToolComplete);
       });
       toolbar.appendChild(btn);
     });
